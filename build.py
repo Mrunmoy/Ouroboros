@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build script for ms-ringbuffer.
+Build script for ouroboros.
 
 Usage:
   python build.py                 # build only
@@ -46,14 +46,14 @@ def configure(examples=False, benchmarks=False):
     ]
 
     if examples:
-        cmd.append("-DMS_RINGBUFFER_BUILD_EXAMPLES=ON")
+        cmd.append("-DOUROBOROS_BUILD_EXAMPLES=ON")
     else:
-        cmd.append("-DMS_RINGBUFFER_BUILD_EXAMPLES=OFF")
+        cmd.append("-DOUROBOROS_BUILD_EXAMPLES=OFF")
 
     if benchmarks:
-        cmd.append("-DMS_RINGBUFFER_BUILD_BENCHMARKS=ON")
+        cmd.append("-DOUROBOROS_BUILD_BENCHMARKS=ON")
     else:
-        cmd.append("-DMS_RINGBUFFER_BUILD_BENCHMARKS=OFF")
+        cmd.append("-DOUROBOROS_BUILD_BENCHMARKS=OFF")
 
     run(cmd, cwd=ROOT)
 
@@ -68,14 +68,14 @@ def test():
 
 
 def run_size():
-    exe = os.path.join(BUILD_DIR, "bench", "ms_ringbuffer_size")
+    exe = os.path.join(BUILD_DIR, "bench", "ouroboros_size")
     if os.name == "nt":
         exe += ".exe"
 
     run([exe], cwd=ROOT)
 
 def size_report():
-    run(["cmake", "--build", BUILD_DIR, "--target", "ms_ringbuffer_size_report"], cwd=ROOT)
+    run(["cmake", "--build", BUILD_DIR, "--target", "ouroboros_size_report"], cwd=ROOT)
 
     report_path = os.path.join(BUILD_DIR, "bench", "size_report.txt")
     if os.path.isfile(report_path):
@@ -87,7 +87,7 @@ def size_report():
         sys.exit(1)
 
 def run_bench(bench_time_s="0.05s", repetitions=1, out_json=None):
-    exe = os.path.join(BUILD_DIR, "bench", "ms_ringbuffer_bench")
+    exe = os.path.join(BUILD_DIR, "bench", "ouroboros_bench")
     if os.name == "nt":
         exe += ".exe"
 
@@ -110,7 +110,7 @@ def run_bench(bench_time_s="0.05s", repetitions=1, out_json=None):
 
 def collect_metrics(bench_time_s="0.2s", repetitions=1):
     # 1) sizeof report
-    exe = os.path.join(BUILD_DIR, "bench", "ms_ringbuffer_size")
+    exe = os.path.join(BUILD_DIR, "bench", "ouroboros_size")
     if os.name == "nt":
         exe += ".exe"
 
@@ -131,12 +131,12 @@ def collect_metrics(bench_time_s="0.2s", repetitions=1):
     print("\nWrote:")
     print(f"  {sizeof_path}")
     print(f"  {os.path.join(BUILD_DIR, 'bench', 'size_report.txt')}")
-    print(f"  {os.path.join(BUILD_DIR, 'bench', 'ms_ringbuffer_size.map')}")
+    print(f"  {os.path.join(BUILD_DIR, 'bench', 'ouroboros_size.map')}")
     print(f"  {results_path}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Build ms-ringbuffer")
+    parser = argparse.ArgumentParser(description="Build ouroboros")
     parser.add_argument("-c", "--clean", action="store_true", help="clean before building")
     parser.add_argument("-t", "--test", action="store_true", help="run tests after building")
     parser.add_argument("-e", "--examples", action="store_true", help="build examples")

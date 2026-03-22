@@ -129,7 +129,7 @@ jobs:
           <head>
             <meta charset="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <title>ms-ringbuffer Benchmark (Latest)</title>
+            <title>ouroboros Benchmark (Latest)</title>
             <style>
               :root {{
                 --bg: #05070d;
@@ -308,7 +308,7 @@ jobs:
           <body>
             <div class="grid"></div>
             <div class="wrap">
-              <h1>ms-ringbuffer Benchmark (Latest)</h1>
+              <h1>ouroboros Benchmark (Latest)</h1>
               <div class="muted">
                 Host: <b>{host}</b> • CPUs: <b>{num_cpus}</b> @ <b>{mhz} MHz</b> • CPU scaling: <b>{scaling_str}</b><br/>
                 Generated: <b>{date}</b>

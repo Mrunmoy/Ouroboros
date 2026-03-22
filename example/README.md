@@ -1,6 +1,6 @@
 # Examples
 
-Usage examples for ms-ringbuffer.
+Usage examples for ouroboros.
 
 ## Building
 
@@ -9,7 +9,7 @@ Usage examples for ms-ringbuffer.
 python3 build.py -e
 
 # Or with CMake directly:
-cmake -B build -DMS_RINGBUFFER_BUILD_EXAMPLES=ON
+cmake -B build -DOUROBOROS_BUILD_EXAMPLES=ON
 cmake --build build -j$(nproc)
 ```
 

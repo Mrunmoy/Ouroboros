@@ -1,6 +1,6 @@
-# ms-ringbuffer
+# ouroboros
 
-![Build](https://github.com/Mrunmoy/ms-ringbuffer/actions/workflows/ci.yml/badge.svg?branch=main&event=push) [![Benchmark Dashboard](https://img.shields.io/badge/Benchmark-Live-darkblue?style=flat-square)](https://mrunmoy.github.io/ms-ringbuffer/)
+![Build](https://github.com/Mrunmoy/ouroboros/actions/workflows/ci.yml/badge.svg?branch=main&event=push) [![Benchmark Dashboard](https://img.shields.io/badge/Benchmark-Live-darkblue?style=flat-square)](https://mrunmoy.github.io/ouroboros/)
 
 Lock-free, single-producer single-consumer (SPSC) ring buffer for C++17.
 
@@ -17,7 +17,7 @@ If you want to understand how the SPSC ring buffer is implemented (and why each 
 Performance and footprint metrics are automatically generated on every
 push to `main`.
 
-Live results: https://mrunmoy.github.io/ms-ringbuffer/
+Live results: https://mrunmoy.github.io/ouroboros/
 
 Includes:
 
@@ -67,10 +67,10 @@ rb.pop(val);  // val == 42
 
 ``` bash
 # Library only (no tests):
-git clone https://github.com/Mrunmoy/ms-ringbuffer
+git clone https://github.com/Mrunmoy/ouroboros
 
 # With tests:
-git clone --recursive https://github.com/Mrunmoy/ms-ringbuffer
+git clone --recursive https://github.com/Mrunmoy/ouroboros
 ```
 
 ### Build script
@@ -93,19 +93,19 @@ cmake --build build -j$(nproc)
 ctest --test-dir build --output-on-failure
 
 # Build examples:
-cmake -B build -DMS_RINGBUFFER_BUILD_EXAMPLES=ON
+cmake -B build -DOUROBOROS_BUILD_EXAMPLES=ON
 cmake --build build -j$(nproc)
 ```
 
 ## Using as a submodule
 
 ``` bash
-git submodule add https://github.com/Mrunmoy/ms-ringbuffer vendor/ms-ringbuffer
+git submodule add https://github.com/Mrunmoy/ouroboros vendor/ouroboros
 ```
 
 ``` cmake
-add_subdirectory(vendor/ms-ringbuffer)
-target_link_libraries(your_target PRIVATE ms-ringbuffer)
+add_subdirectory(vendor/ouroboros)
+target_link_libraries(your_target PRIVATE ouroboros)
 ```
 
 Tests and examples are not built when used as a submodule.
