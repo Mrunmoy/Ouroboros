@@ -1,8 +1,11 @@
 # ouroboros
 
-![Build](https://github.com/Mrunmoy/ouroboros/actions/workflows/ci.yml/badge.svg?branch=main&event=push) [![Benchmark Dashboard](https://img.shields.io/badge/Benchmark-Live-darkblue?style=flat-square)](https://mrunmoy.github.io/ouroboros/)
+[![Build](https://github.com/Mrunmoy/ouroboros/actions/workflows/ci.yml/badge.svg)](https://github.com/Mrunmoy/ouroboros/actions/workflows/ci.yml)
+[![Pages](https://github.com/Mrunmoy/ouroboros/actions/workflows/pages.yml/badge.svg)](https://github.com/Mrunmoy/ouroboros/actions/workflows/pages.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://mrunmoy.github.io/ouroboros/badges/coverage.json)](https://mrunmoy.github.io/ouroboros/coverage/)
+[![Dashboard](https://img.shields.io/badge/Dashboard-Live-darkblue?style=flat)](https://mrunmoy.github.io/ouroboros/)
 
-Lock-free, single-producer single-consumer (SPSC) ring buffer for C++17.
+Lock-free ring buffer library for C++17 — SPSC, MPSC, and SPMC variants.
 
 Header-only. Cache-friendly. Generic over any trivially copyable type.
 
@@ -12,20 +15,21 @@ If you want to understand how the SPSC ring buffer is implemented (and why each 
 
 - [WalkthroughSPSC.md](WalkthroughSPSC.md)
 
-## Benchmark dashboard
+## Dashboard
 
-Performance and footprint metrics are automatically generated on every
-push to `main`.
+Performance, code size, and coverage metrics are automatically generated
+on every push to `main`.
 
 Live results: https://mrunmoy.github.io/ouroboros/
 
 Includes:
 
--   SPSC throughput benchmarks (`uint64_t` and 64-byte payload)
+-   SPSC / MPSC / SPMC throughput benchmarks
 -   Items/sec and GiB/sec metrics
--   Code size report (`text`)
--   RAM usage (`data + bss`)
+-   ARM code size (Cortex-M4, Cortex-A53, Cortex-R5)
+-   Native code size report (`text`, `data`, `bss`)
 -   `sizeof` footprint for multiple configurations
+-   Test coverage report
 
 ------------------------------------------------------------------------
 

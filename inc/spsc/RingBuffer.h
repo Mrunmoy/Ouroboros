@@ -56,6 +56,8 @@ namespace ouroboros::spsc
                       "CacheLineSize must be greater than sizeof(atomic<uint32_t>)");
         static_assert(CacheLineSize > 0 && (CacheLineSize & (CacheLineSize - 1)) == 0,
                       "CacheLineSize must be a power of 2");
+        static_assert(std::atomic<uint32_t>::is_always_lock_free,
+                      "uint32_t atomics must be lock-free on this platform");
 
     public:
         using value_type = T;

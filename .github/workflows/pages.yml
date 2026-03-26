@@ -1,0 +1,204 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # ── Benchmarks + native size ───────────────────────────────────────
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake python3
+
+      - name: Build and collect metrics
+        run: python3 build.py -b --collect-metrics --bench-time 0.2s --bench-reps 1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: |
+            build/bench/results.json
+            build/bench/size_report.txt
+            build/bench/sizeof_report.txt
+
+  # ── Code coverage ──────────────────────────────────────────────────
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake lcov
+
+      - name: Build with coverage
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
+          cmake --build build -j$(nproc)
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Generate coverage report
+        run: |
+          lcov --capture --directory build --output-file coverage.info \
+            --rc lcov_branch_coverage=1
+          lcov --remove coverage.info '/usr/*' '*/vendor/*' '*/test/*' \
+            --output-file coverage.info --rc lcov_branch_coverage=1
+          genhtml coverage.info --output-directory coverage_html \
+            --branch-coverage --title "ouroboros" --legend
+
+          # Extract line coverage percentage
+          PCT=$(lcov --summary coverage.info 2>&1 | grep 'lines' | sed 's/.*: \([0-9.]*\)%.*/\1/')
+          echo "$PCT" > coverage_pct.txt
+          echo "Line coverage: ${PCT}%"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-results
+          path: |
+            coverage_html/
+            coverage_pct.txt
+
+  # ── ARM cross-compiled code size ───────────────────────────────────
+  arm-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ARM toolchains
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-arm-none-eabi \
+            g++-aarch64-linux-gnu
+
+      - name: Compile for Cortex-M4
+        run: |
+          arm-none-eabi-g++ -std=c++17 -Os \
+            -mcpu=cortex-m4 -mthumb -ffreestanding \
+            -fno-exceptions -fno-rtti \
+            -ffunction-sections -fdata-sections \
+            -I inc -c bench/size/RingBufferSizeARM.cpp -o arm_m4.o
+          arm-none-eabi-size arm_m4.o > arm_cortex_m4.txt
+          arm-none-eabi-size -A arm_m4.o >> arm_cortex_m4.txt
+          cat arm_cortex_m4.txt
+
+      - name: Compile for Cortex-A53
+        run: |
+          aarch64-linux-gnu-g++ -std=c++17 -Os \
+            -mcpu=cortex-a53 -ffreestanding \
+            -fno-exceptions -fno-rtti \
+            -ffunction-sections -fdata-sections \
+            -I inc -c bench/size/RingBufferSizeARM.cpp -o arm_a53.o
+          aarch64-linux-gnu-size arm_a53.o > arm_cortex_a53.txt
+          aarch64-linux-gnu-size -A arm_a53.o >> arm_cortex_a53.txt
+          cat arm_cortex_a53.txt
+
+      - name: Compile for Cortex-R5
+        run: |
+          arm-none-eabi-g++ -std=c++17 -Os \
+            -mcpu=cortex-r5 -mthumb -ffreestanding \
+            -fno-exceptions -fno-rtti \
+            -ffunction-sections -fdata-sections \
+            -I inc -c bench/size/RingBufferSizeARM.cpp -o arm_r5.o
+          arm-none-eabi-size arm_r5.o > arm_cortex_r5.txt
+          arm-none-eabi-size -A arm_r5.o >> arm_cortex_r5.txt
+          cat arm_cortex_r5.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arm-size-results
+          path: |
+            arm_cortex_m4.txt
+            arm_cortex_a53.txt
+            arm_cortex_r5.txt
+
+  # ── Fuzz testing ───────────────────────────────────────────────────
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build fuzz targets
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DOUROBOROS_BUILD_FUZZ=ON
+          cmake --build build -j$(nproc) --target fuzz_spsc fuzz_mpsc fuzz_spmc
+
+      - name: Run fuzzers (30s each)
+        run: |
+          set -euo pipefail
+          mkdir -p fuzz_corpus_spsc fuzz_corpus_mpsc fuzz_corpus_spmc
+
+          echo "=== Fuzzing SPSC ==="
+          ./build/test/fuzz/fuzz_spsc fuzz_corpus_spsc/ \
+            -max_total_time=30 -print_final_stats=1
+
+          echo "=== Fuzzing MPSC ==="
+          ./build/test/fuzz/fuzz_mpsc fuzz_corpus_mpsc/ \
+            -max_total_time=30 -print_final_stats=1
+
+          echo "=== Fuzzing SPMC ==="
+          ./build/test/fuzz/fuzz_spmc fuzz_corpus_spmc/ \
+            -max_total_time=30 -print_final_stats=1
+
+          echo "Fuzz tests completed" > fuzz_status.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-results
+          path: fuzz_status.txt
+
+  # ── Deploy to GitHub Pages ─────────────────────────────────────────
+  deploy:
+    needs: [benchmark, coverage, arm-size, fuzz]
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate Pages content
+        run: |
+          ARTIFACT_DIR=artifacts OUT_DIR=public python3 scripts/generate_pages.py
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
